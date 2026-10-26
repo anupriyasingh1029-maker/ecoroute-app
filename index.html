@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>EcoRoute – Eco-Friendly Route Planner</title>
+  <meta name="description" content="Compare travel options by carbon emissions, travel time, fuel, and cost in INR with interactive map routing, charts, and greener travel insights." />
+  <meta property="og:title" content="EcoRoute – Eco-Friendly Route Planner" />
+  <meta property="og:description" content="Compare travel options by carbon emissions, travel time, fuel, and cost in INR with interactive map routing, charts, and greener travel insights." />
+  <meta property="og:type" content="website" />
+  <meta name="twitter:card" content="summary_large_image" />
+
+  <!-- Favicon SVG -->
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23059669'><path d='M11 20A7 7 0 0 1 4 13C4 8.5 7.5 4.5 12 3a9 9 0 0 1 8 8c0 4.5-3.5 9-9 9z'/><path d='M11 20V12'/><path d='M11 12l4-4'/></svg>" />
+
+  <!-- Leaflet CSS for OpenStreetMap -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+
+  <!-- EcoRoute Custom Styles -->
+  <link rel="stylesheet" href="./style.css" />
+</head>
+<body>
+  <!-- Site Header -->
+  <header class="site-header">
+    <div class="header-container">
+      <a href="#" class="brand">
+        <div class="brand-icon" aria-hidden="true">
+          <!-- Leaf / Plant icon -->
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M11 20A7 7 0 0 1 4 13C4 8.5 7.5 4.5 12 3a9 9 0 0 1 8 8c0 4.5-3.5 9-9 9z"/>
+            <path d="M11 20V12"/>
+            <path d="m11 12 4-4"/>
+          </svg>
+        </div>
+        <div class="brand-text">
+          <h1>Eco<span>Route</span></h1>
+          <div class="brand-subtitle">Eco-Friendly Route & Emissions Planner</div>
+        </div>
+      </a>
+
+      <div class="header-actions">
+        <!-- Dark / Light Mode Toggle Button -->
+        <button id="themeToggleBtn" class="theme-toggle-btn" type="button" aria-label="Toggle theme">
+          <span id="themeIcon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+            </svg>
+          </span>
+          <span id="themeLabel">Dark Mode</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Hero Section with Green City Banner & Dark Green Overlay -->
+  <section class="hero-banner">
+    <div class="hero-banner-inner">
+      <img 
+        src="https://images.unsplash.com/photo-1508873696983-2df5703bc20d?auto=format&fit=crop&w=1600&q=80" 
+        alt="Green eco city street with bicycles and lush trees" 
+        class="hero-banner-img" 
+        loading="lazy"
+      />
+      <div class="hero-overlay" aria-hidden="true"></div>
+      <div class="hero-content">
+        <div class="hero-badge">Smart Sustainable Mobility</div>
+        <h2 class="hero-title">Compare Commute Footprints & Travel Greener</h2>
+        <p class="hero-description">
+          Calculate emissions across 10 transport modes with real road routing. See travel times, fuel burned, and costs in ₹ INR to pick the cleanest route for every journey.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Main Content Layout -->
+  <main class="main-wrapper">
+    <div class="planner-grid">
+      
+      <!-- ================= LEFT COLUMN: CONTROLS & HISTORY ================= -->
+      <aside class="controls-column">
+        <!-- Planner Form Card -->
+        <div class="card">
+          <div class="card-title">
+            <span>Trip Parameters</span>
+            <button id="swapPointsBtn" class="btn-secondary" type="button" title="Swap Origin & Destination">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m7 15 5 5 5-5"/><path d="m7 9 5-5 5 5"/></svg>
+              Swap
+            </button>
+          </div>
+
+          <form id="plannerForm">
+            <!-- Source Input -->
+            <div class="input-group">
+              <label for="sourceInput" class="input-label">Start Location (Point A)</label>
+              <div class="input-with-icon">
+                <span class="input-icon-prefix">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="3"/></svg>
+                </span>
+                <input 
+                  type="text" 
+                  id="sourceInput" 
+                  class="text-input" 
+                  placeholder="e.g. Connaught Place, New Delhi" 
+                  value="Connaught Place, New Delhi" 
+                  required 
+                />
+                <button type="button" id="locateMeBtn" class="input-action-btn" title="Use my GPS location">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v3m0 14v3M2 12h3m14 0h3"/><circle cx="12" cy="12" r="7"/></svg>
+                </button>
+              </div>
+            </div>
+
+            <!-- Destination Input -->
+            <div class="input-group">
+              <label for="destInput" class="input-label">Destination Location (Point B)</label>
+              <div class="input-with-icon">
+                <span class="input-icon-prefix">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                </span>
+                <input 
+                  type="text" 
+                  id="destInput" 
+                  class="text-input" 
+                  placeholder="e.g. DLF Cyber City, Gurugram" 
+                  value="Gurugram Cyber City, Haryana" 
+                  required 
+                />
+              </div>
+            </div>
+
+            <!-- Manual Distance (km) Input -->
+            <div class="input-group">
+              <label for="manualDistanceInput" class="input-label">Distance (km)</label>
+              <div class="input-with-icon">
+                <span class="input-icon-prefix">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m2 12 5-5m0 0 5 5M7 7v10"/><path d="m22 12-5 5m0 0-5-5m5 5V7"/></svg>
+                </span>
+                <input 
+                  type="number" 
+                  id="manualDistanceInput" 
+                  class="text-input" 
+                  min="0.1" 
+                  max="5000" 
+                  step="0.1" 
+                  value="15.0" 
+                  required 
+                />
+              </div>
+            </div>
+
+            <!-- Options: Passengers & Round Trip -->
+            <div class="options-row">
+              <!-- Passenger Count -->
+              <div>
+                <span class="input-label">Passengers</span>
+                <div class="stepper-container">
+                  <button type="button" id="btnMinusPassenger" class="stepper-btn" aria-label="Decrease passengers">−</button>
+                  <input type="number" id="passengerCountInput" class="stepper-input" value="1" min="1" max="10" readonly />
+                  <button type="button" id="btnPlusPassenger" class="stepper-btn" aria-label="Increase passengers">+</button>
+                </div>
+              </div>
+
+              <!-- Round Trip Toggle -->
+              <div>
+                <span class="input-label">Round Trip?</span>
+                <div class="toggle-card">
+                  <span class="toggle-label">2x Return</span>
+                  <label class="switch">
+                    <input type="checkbox" id="roundTripSwitch" />
+                    <span class="slider"></span>
+                  </label>
+                </div>
+              </div>
+            </div>
+
+            <!-- Primary Action Button -->
+            <button type="submit" class="btn-primary">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 18 6-6-6-6"/></svg>
+              Calculate My Route
+            </button>
+
+            <!-- Quick Presets -->
+            <div style="margin-top: 1rem;">
+              <span class="input-label" style="font-size: 0.75rem;">Quick Presets:</span>
+              <div id="presetChipsContainer" class="preset-chips"></div>
+            </div>
+
+            <!-- Dynamic Alert Message -->
+            <div id="alertBanner" class="alert-box" role="alert"></div>
+          </form>
+        </div>
+
+        <!-- Recent Searches Card -->
+        <div class="card">
+          <div class="card-title">
+            <span>Recent Searches</span>
+            <button type="button" class="btn-secondary" onclick="clearAllHistory()" style="padding: 0.2rem 0.5rem; font-size: 0.72rem;">Clear</button>
+          </div>
+          <ul id="searchHistoryList" class="history-list">
+            <!-- Populated dynamically via localStorage -->
+          </ul>
+        </div>
+
+        <!-- Green Mobility Benchmark Card -->
+        <div class="card" style="background: var(--bg-emerald-soft);">
+          <div class="card-title" style="margin-bottom: 0.5rem;">
+            <span>🌱 Why Track Commute Emissions?</span>
+          </div>
+          <p style="font-size: 0.8rem; color: var(--text-secondary); line-height: 1.5;">
+            Urban transport generates over <strong>24% of direct CO2 emissions</strong> from fuel combustion globally. 
+            Switching just 1 trip per week from a solo petrol car to metro, cycling, or bus can cut your annual travel footprint by up to <strong>400 kg CO2</strong>!
+          </p>
+        </div>
+      </aside>
+
+      <!-- ================= RIGHT COLUMN: MAP, RESULTS & CHARTS ================= -->
+      <section class="results-column">
+        
+        <!-- Interactive Leaflet Map Card -->
+        <div class="card map-card">
+          <div class="map-header">
+            <div class="card-title" style="margin-bottom: 0;">
+              <span>Interactive Route Map</span>
+            </div>
+            <div class="map-status-pill">
+              <span class="map-status-dot"></span>
+              <span id="mapStatusText">Click map to set Origin / Destination</span>
+            </div>
+          </div>
+          <!-- Leaflet Map Container -->
+          <div id="map"></div>
+          <div class="map-instruction-overlay">
+            💡 Tip: Click on map to drop Point A (Start) and Point B (End), or drag the markers.
+          </div>
+        </div>
+
+        <!-- Trip Summary Bar -->
+        <div id="tripSummaryBar" class="trip-summary-bar">
+          <!-- Populated by JS -->
+        </div>
+
+        <!-- Spotlight Card: The Greenest Option -->
+        <div id="spotlightCard" class="card spotlight-card">
+          <!-- Populated by JS -->
+        </div>
+
+        <!-- Transport Modes Comparison Cards Grid -->
+        <div>
+          <div class="card-title" style="margin-bottom: 0.75rem;">
+            <span>Transport Modes Compared (10 Options)</span>
+          </div>
+          <div id="modesGrid" class="modes-grid">
+            <!-- Populated by JS -->
+          </div>
+        </div>
+
+        <!-- Chart.js Carbon Emissions Bar Chart -->
+        <div class="card chart-card">
+          <div class="card-title">
+            <span>Carbon Emissions Comparison (kg CO2 per person)</span>
+            <span style="font-size: 0.75rem; color: var(--text-muted); font-weight: 400;">Lower is better</span>
+          </div>
+          <div class="chart-wrapper">
+            <canvas id="co2Chart"></canvas>
+          </div>
+        </div>
+
+        <!-- Detailed Comparison Table -->
+        <div class="card" style="padding: 1.25rem;">
+          <div class="card-title">
+            <span>Full Travel Modes Matrix</span>
+          </div>
+          <div class="table-responsive">
+            <table class="compare-table">
+              <thead>
+                <tr>
+                  <th>Mode of Transport</th>
+                  <th>CO2 (kg)</th>
+                  <th>Est. Cost (₹)</th>
+                  <th>Travel Time</th>
+                  <th>Fuel / Energy</th>
+                  <th>Savings vs Petrol Car</th>
+                </tr>
+              </thead>
+              <tbody id="compareTableBody">
+                <!-- Populated by JS -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Tips to Travel Greener Section with Side Illustration -->
+        <section class="tips-section card">
+          <div class="tips-header-layout">
+            <div>
+              <div class="card-title" style="margin-bottom: 0.35rem;">
+                <span>💡 5 High-Impact Tips to Travel Greener</span>
+              </div>
+              <p style="font-size: 0.825rem; color: var(--text-secondary); line-height: 1.5;">
+                Simple everyday habits that save fuel, lower travel costs, and dramatically reduce greenhouse gas emissions across your daily commutes.
+              </p>
+            </div>
+            <!-- Small Clean Photo Illustration beside Tips -->
+            <div class="tips-image-box">
+              <img 
+                src="https://images.unsplash.com/photo-1571068316344-75bc76f77890?auto=format&fit=crop&w=600&q=80" 
+                alt="Cyclist commuting sustainably through a green city park" 
+                class="tips-img" 
+                loading="lazy" 
+              />
+            </div>
+          </div>
+
+          <div class="tips-grid">
+            <div class="tip-card">
+              <div class="tip-header">
+                <div class="tip-icon">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2 3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+                </div>
+                <div class="tip-title">Adopt Active Travel</div>
+              </div>
+              <p class="tip-text">For short trips under 3 km, walking or cycling produces 0 direct emissions, burns calories, and avoids parking hassle completely.</p>
+            </div>
+
+            <div class="tip-card">
+              <div class="tip-header">
+                <div class="tip-icon">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="15" rx="2"/><circle cx="7" cy="15" r="1.5"/><circle cx="17" cy="15" r="1.5"/></svg>
+                </div>
+                <div class="tip-title">Choose Metro & Bus</div>
+              </div>
+              <p class="tip-text">Electrified urban metro and buses carry dozens of commuters simultaneously, slashing per-capita emissions by up to 85% compared to solo driving.</p>
+            </div>
+
+            <div class="tip-card">
+              <div class="tip-header">
+                <div class="tip-icon">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                </div>
+                <div class="tip-title">Carpool When Driving</div>
+              </div>
+              <p class="tip-text">Sharing rides with 2–3 colleagues or neighbours divides fuel consumption and emissions proportionally per person, while reducing road congestion.</p>
+            </div>
+
+            <div class="tip-card">
+              <div class="tip-header">
+                <div class="tip-icon">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+                </div>
+                <div class="tip-title">Maintain Tire Pressure</div>
+              </div>
+              <p class="tip-text">Keeping vehicle tires properly inflated improves fuel economy by 3–4% and reduces engine strain, cutting unnecessary fuel burn.</p>
+            </div>
+
+            <div class="tip-card">
+              <div class="tip-header">
+                <div class="tip-icon">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 20V10"/><path d="M12 20V4"/><path d="M6 20v-6"/></svg>
+                </div>
+                <div class="tip-title">Combine Your Errands</div>
+              </div>
+              <p class="tip-text">Batching multiple small errands into one combined circuit keeps the engine warm, which is significantly more fuel-efficient than several cold-start trips.</p>
+            </div>
+          </div>
+        </section>
+
+      </section>
+    </div>
+  </main>
+
+  <!-- Site Footer with Nature Pattern -->
+  <footer class="site-footer">
+    <div class="footer-content">
+      <p><strong>EcoRoute</strong> – Sustainable Mobility & Carbon Emission Route Planner</p>
+      <p class="footer-meta">
+        Built with HTML5, CSS3, and Vanilla JavaScript · Leaflet.js & OpenStreetMap · Chart.js · 100% Free & Open-Source (GitHub Pages Ready)
+      </p>
+    </div>
+  </footer>
+
+  <!-- Leaflet JS -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <!-- Main Script -->
+  <script src="./script.js"></script>
+</body>
+</html>

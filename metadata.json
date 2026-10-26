@@ -1,0 +1,6 @@
+{
+  "name": "EcoRoute – Eco-Friendly Route Planner",
+  "description": "Compare travel options by carbon emissions, travel time, fuel, and cost in INR with interactive map routing, charts, and greener travel insights.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
